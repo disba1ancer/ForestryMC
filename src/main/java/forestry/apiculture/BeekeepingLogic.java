@@ -52,7 +52,7 @@ import forestry.core.network.IStreamable;
 import forestry.core.proxy.Proxies;
 import forestry.core.utils.Log;
 
-public class BeekeepingLogic implements IBeekeepingLogic {
+public class BeekeepingLogic implements IBeekeepingLogic, IStreamable {
 
 	private static final int totalBreedingTime = Constants.APIARY_BREEDING_TIME;
 
@@ -213,8 +213,7 @@ public class BeekeepingLogic implements IBeekeepingLogic {
 			errorLogic.setCondition(true, errorState);
 		}
 
-		hasFlowersCache.update(queen, housing);
-		boolean hasFlowers = hasFlowersCache.hasFlowers();
+		boolean hasFlowers = hasFlowersCache.hasFlowers(queen, housing);
 		boolean flowerCacheNeedsSync = hasFlowersCache.needsSync();
 		errorLogic.setCondition(!hasFlowers, EnumErrorCode.NO_FLOWER);
 

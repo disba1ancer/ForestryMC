@@ -26,14 +26,14 @@ import forestry.core.network.packets.PacketCoordinates;
 import forestry.core.proxy.Proxies;
 
 public class PacketBeeLogicActive extends PacketCoordinates implements IForestryPacketClient {
-	private IBeekeepingLogic beekeepingLogic;
+	private BeekeepingLogic beekeepingLogic;
 
 	public PacketBeeLogicActive() {
 	}
 
 	public PacketBeeLogicActive(IBeeHousing tile) {
 		super(tile.getCoordinates());
-		this.beekeepingLogic = tile.getBeekeepingLogic();
+		this.beekeepingLogic = (BeekeepingLogic) tile.getBeekeepingLogic();
 	}
 
 	@Override
@@ -53,7 +53,9 @@ public class PacketBeeLogicActive extends PacketCoordinates implements IForestry
 		if (tile instanceof IBeeHousing) {
 			IBeeHousing beeHousing = (IBeeHousing) tile;
 			IBeekeepingLogic beekeepingLogic = beeHousing.getBeekeepingLogic();
-			beekeepingLogic.readData(data);
+			if (beekeepingLogic instanceof BeekeepingLogic) {
+				((BeekeepingLogic) beekeepingLogic).readData(data);
+			}
 		}
 	}
 }

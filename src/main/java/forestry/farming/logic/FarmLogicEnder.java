@@ -13,11 +13,9 @@ package forestry.farming.logic;
 import java.util.Collection;
 import java.util.Stack;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -29,25 +27,20 @@ import forestry.api.farming.IFarmHousing;
 import forestry.api.farming.IFarmable;
 import forestry.core.utils.BlockUtil;
 
-public class FarmLogicExU extends FarmLogicHomogeneous {
+public class FarmLogicEnder extends FarmLogicHomogeneous {
 
-	private final String name;
-	private final Item iconItem;
-
-	public FarmLogicExU(String name, Item iconItem, Block soil, String farmablesKey) {
-		super(new ItemStack(soil), soil.getDefaultState(), Farmables.farmables.get(farmablesKey));
-		this.name = name;
-		this.iconItem = iconItem;
+	public FarmLogicEnder() {
+		super(new ItemStack(Blocks.END_STONE), Blocks.END_STONE.getDefaultState(), Farmables.farmables.get("farmEnder"));
 	}
 
 	@Override
 	public String getName() {
-		return name;
+		return "Managed Ender Farm";
 	}
 
 	@Override
 	public ItemStack getIconItemStack() {
-		return new ItemStack(iconItem);
+		return new ItemStack(Items.ENDER_EYE);
 	}
 
 	@Override

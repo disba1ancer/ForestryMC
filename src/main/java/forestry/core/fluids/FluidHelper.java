@@ -12,6 +12,7 @@ package forestry.core.fluids;
 
 import javax.annotation.Nonnull;
 
+import forestry.core.utils.InventoryUtil;
 import forestry.core.utils.ItemStackUtil;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -106,7 +107,7 @@ public final class FluidHelper {
 
 		boolean moveToOutput = fluidInContainer.amount >= containerEmptyCapacity;
 		if (moveToOutput) {
-			if (output != null && (output.stackSize >= output.getMaxStackSize() || !ItemStackUtil.areItemStacksEqualIgnoreCount(filled, output))) {
+			if (output != null && (output.stackSize >= output.getMaxStackSize() || !InventoryUtil.isItemEqual(filled, output))) {
 				return FillStatus.NO_SPACE;
 			}
 		} else {

@@ -14,7 +14,6 @@ import javax.annotation.Nonnull;
 import java.util.List;
 
 import com.google.common.collect.ImmutableMap;
-
 import forestry.api.apiculture.IBeeGenome;
 import forestry.api.apiculture.IBeeHousing;
 import forestry.api.apiculture.IHiveTile;
@@ -46,7 +45,6 @@ import forestry.core.tiles.TileEscritoire;
 import forestry.core.tiles.TileMill;
 import forestry.core.tiles.TileNaturalistChest;
 import forestry.core.utils.VectUtil;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -69,7 +67,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
-
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.animation.ITimeValue;
@@ -143,16 +140,16 @@ public class ProxyRenderClient extends ProxyRender {
 	public void bindTexture(ResourceLocation location) {
 		Minecraft.getMinecraft().getTextureManager().bindTexture(location);
 	}
-
+	
 	@Override
 	public void registerBlockModel(@Nonnull final BlockModelEntry index) {
 		ModelManager.getInstance().registerCustomBlockModel(index);
-		if (index.addStateMapper) {
+		if(index.addStateMapper){
 			StateMapperBase ignoreState = new BlockModeStateMapper(index);
 			registerStateMapper(index.block, ignoreState);
 		}
 	}
-
+	
 	@Override
 	public void registerModel(@Nonnull ModelEntry index) {
 		ModelManager.getInstance().registerCustomModel(index);
@@ -184,9 +181,9 @@ public class ProxyRenderClient extends ProxyRender {
 	}
 
 	@Override
-	public IAnimationStateMachine loadAnimationState(ResourceLocation location, ImmutableMap<String, ITimeValue> parameters) {
+    public IAnimationStateMachine loadAnimationState(ResourceLocation location, ImmutableMap<String, ITimeValue> parameters){
 		return ModelLoaderRegistry.loadASM(location, parameters);
-	}
+    }
 
 	private static boolean shouldSpawnParticle(World world) {
 		if (!Config.enableParticleFX) {
@@ -231,33 +228,34 @@ public class ProxyRenderClient extends ProxyRender {
 
 		int color = genome.getPrimary().getSpriteColour(0);
 
-		int randomInt = world.rand.nextInt(100);
+		if (!flowerPositions.isEmpty()) {
+			int randomInt = world.rand.nextInt(100);
 
-		if (housing instanceof IHiveTile) {
-			if (((IHiveTile) housing).isAngry() || randomInt >= 85) {
-				List<EntityLivingBase> entitiesInRange = AlleleEffect.getEntitiesInRange(genome, housing, EntityLivingBase.class);
-				if (!entitiesInRange.isEmpty()) {
-					EntityLivingBase entity = entitiesInRange.get(world.rand.nextInt(entitiesInRange.size()));
-					Particle particle = new ParticleBeeTargetEntity(world, particleStart, entity, color);
-					effectRenderer.addEffect(particle);
-					return;
+			if (housing instanceof IHiveTile) {
+				if (((IHiveTile) housing).isAngry() || randomInt >= 85) {
+					List<EntityLivingBase> entitiesInRange = AlleleEffect.getEntitiesInRange(genome, housing, EntityLivingBase.class);
+					if (!entitiesInRange.isEmpty()) {
+						EntityLivingBase entity = entitiesInRange.get(world.rand.nextInt(entitiesInRange.size()));
+						Particle particle = new ParticleBeeTargetEntity(world, particleStart, entity, color);
+						effectRenderer.addEffect(particle);
+						return;
+					}
 				}
 			}
-		}
 
-		if (randomInt < 75 && !flowerPositions.isEmpty()) {
-			BlockPos destination = flowerPositions.get(world.rand.nextInt(flowerPositions.size()));
-			Particle particle = new ParticleBeeRoundTrip(world, particleStart, destination, color);
-			effectRenderer.addEffect(particle);
-		} else {
-			Vec3i area = AlleleEffect.getModifiedArea(genome, housing);
-			Vec3i offset = housing.getCoordinates().add(-area.getX() / 2, -area.getY() / 4, -area.getZ() / 2);
-			BlockPos destination = VectUtil.getRandomPositionInArea(world.rand, area).add(offset);
-			Particle particle = new ParticleBeeExplore(world, particleStart, destination, color);
-			effectRenderer.addEffect(particle);
+			if (randomInt < 75) {
+				BlockPos destination = flowerPositions.get(world.rand.nextInt(flowerPositions.size()));
+				Particle particle = new ParticleBeeRoundTrip(world, particleStart, destination, color);
+				effectRenderer.addEffect(particle);
+			} else {
+				Vec3i area = AlleleEffect.getModifiedArea(genome, housing);
+				Vec3i offset = housing.getCoordinates().add(-area.getX() / 2, -area.getY() / 4, -area.getZ() / 2);
+				BlockPos destination = VectUtil.getRandomPositionInArea(world.rand, area).add(offset);
+				Particle particle = new ParticleBeeExplore(world, particleStart, destination, color);
+				effectRenderer.addEffect(particle);
+			}
 		}
 	}
-
 
 	@Override
 	public void addEntityHoneyDustFX(World world, double x, double y, double z) {
@@ -319,14 +317,12 @@ public class ProxyRenderClient extends ProxyRender {
 		float red = (color >> 16 & 255) / 255.0F;
 		float green = (color >> 8 & 255) / 255.0F;
 		float blue = (color & 255) / 255.0F;
-
+		
 		ParticleManager effectRenderer = Minecraft.getMinecraft().effectRenderer;
-		Particle particle = effectRenderer.spawnEffectParticle(EnumParticleTypes.SPELL.getParticleID(), x, y, z, 0, 0, 0);
-		if (particle != null) {
-			particle.setRBGColorF(red, green, blue);
+		Particle Particle = effectRenderer.spawnEffectParticle(EnumParticleTypes.SPELL.getParticleID(), x, y, z, 0, 0, 0);
+		Particle.setRBGColorF(red, green, blue);
 
-			effectRenderer.addEffect(particle);
-		}
+		effectRenderer.addEffect(Particle);
 	}
 
 	private static class BlockModeStateMapper extends StateMapperBase {
@@ -368,4 +364,3 @@ public class ProxyRenderClient extends ProxyRender {
 		}
 	}
 }
-

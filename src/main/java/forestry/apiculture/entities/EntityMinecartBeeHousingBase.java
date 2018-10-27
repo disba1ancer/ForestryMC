@@ -37,8 +37,6 @@ import forestry.core.owner.IOwnerHandler;
 import forestry.core.owner.OwnerHandler;
 import forestry.core.proxy.Proxies;
 import forestry.core.tiles.IClimatised;
-import forestry.core.utils.TickHelper;
-
 import net.minecraft.entity.item.EntityMinecart;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
@@ -51,10 +49,12 @@ import net.minecraft.world.biome.Biome;
 public abstract class EntityMinecartBeeHousingBase extends EntityMinecartContainerForestry implements IBeeHousing, IOwnedTile, IGuiBeeHousingInventory, IClimatised, IStreamableGui {
 	private static final DataParameter<Optional<GameProfile>> OWNER = EntityDataManager.createKey(EntityMinecartBeeHousingBase.class, GameProfileDataSerializer.INSTANCE);
 
+	private static final Random random = new Random();
 	private static final int beeFXInterval = 4;
 	private static final int pollenFXInterval = 50;
 
-	private final TickHelper tickHelper = new TickHelper();
+	private final int beeFXTime = random.nextInt(beeFXInterval);
+	private final int pollenFXTime = random.nextInt(pollenFXInterval);
 
 	private final IBeekeepingLogic beeLogic = BeeManager.beeRoot.createBeekeepingLogic(this);
 	private final IErrorLogic errorLogic = ForestryAPI.errorStateRegistry.createErrorLogic();
@@ -190,7 +190,6 @@ public abstract class EntityMinecartBeeHousingBase extends EntityMinecartContain
 	@Override
 	public void onUpdate() {
 		super.onUpdate();
-		tickHelper.onTick();
 		if (!worldObj.isRemote) {
 			if (beeLogic.canWork()) {
 				beeLogic.doWork();
@@ -203,11 +202,11 @@ public abstract class EntityMinecartBeeHousingBase extends EntityMinecartContain
 			}
 
 			if (beeLogic.canDoBeeFX()) {
-				if (tickHelper.updateOnInterval(beeFXInterval)) {
+				if (worldObj.getTotalWorldTime() % beeFXInterval == beeFXTime) {
 					beeLogic.doBeeFX();
 				}
 
-				if (tickHelper.updateOnInterval(pollenFXInterval)) {
+				if (worldObj.getTotalWorldTime() % pollenFXInterval == pollenFXTime) {
 					TileBeeHousingBase.doPollenFX(worldObj, posX - 0.5, posY - 0.1, posZ - 0.5);
 				}
 			}

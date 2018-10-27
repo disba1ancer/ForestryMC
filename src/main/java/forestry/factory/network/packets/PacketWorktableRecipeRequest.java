@@ -42,14 +42,19 @@ public class PacketWorktableRecipeRequest extends PacketCoordinates implements I
 	@Override
 	protected void writeData(DataOutputStreamForestry data) throws IOException {
 		super.writeData(data);
-		recipe.writeData(data);
+		data.writeStreamable(recipe);
+	}
+
+	@Override
+	public void readData(DataInputStreamForestry data) throws IOException {
+		super.readData(data);
+		recipe = data.readStreamable(MemorizedRecipe.class);
 	}
 
 	@Override
 	public void onPacketData(DataInputStreamForestry data, EntityPlayerMP player) throws IOException {
 		TileEntity tile = getTarget(player.worldObj);
 		if (tile instanceof TileWorktable) {
-			recipe = new MemorizedRecipe(data, player.worldObj);
 			TileWorktable worktable = (TileWorktable) tile;
 			worktable.setCurrentRecipe(recipe);
 

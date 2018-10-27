@@ -46,10 +46,8 @@ import forestry.energy.circuits.CircuitElectricBoost;
 import forestry.energy.circuits.CircuitElectricChoke;
 import forestry.energy.circuits.CircuitElectricEfficiency;
 import forestry.farming.circuits.CircuitFarmLogic;
-import forestry.farming.logic.FarmLogicArboreal;
 import forestry.farming.logic.FarmLogicRubber;
 import forestry.farming.logic.FarmableBasicIC2Crop;
-import forestry.farming.logic.FarmableSapling;
 import forestry.plugins.BlankForestryPlugin;
 import forestry.plugins.ForestryPlugin;
 import forestry.plugins.ForestryPluginUids;
@@ -241,10 +239,13 @@ public class PluginIC2 extends BlankForestryPlugin {
 		}
 
 		if (rubberSapling != null && resin != null) {
-			Farmables.farmables.put("farmArboreal", new FarmableSapling(
-					rubberSapling,
-					new ItemStack[] { resin }
-			));
+			String saplingName = ItemStackUtil.getBlockNameFromRegistryAsSting(ItemStackUtil.getBlock(rubberSapling));
+			String resinName = ItemStackUtil.getItemNameFromRegistryAsString(resin.getItem());
+			String imc = String.format("farmArboreal@%s.%s.%s.%s",
+					saplingName, rubberSapling.getItemDamage(),
+					resinName, resin.getItemDamage());
+			Log.trace("Sending IMC '%s'.", imc);
+			FMLInterModComms.sendMessage(Constants.MOD_ID, "add-farmable-sapling", imc);
 		}
 
 

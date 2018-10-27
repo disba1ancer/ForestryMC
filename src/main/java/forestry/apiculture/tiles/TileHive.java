@@ -10,13 +10,40 @@
  ******************************************************************************/
 package forestry.apiculture.tiles;
 
-import com.google.common.base.Predicate;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.base.Predicate;
+import com.mojang.authlib.GameProfile;
+import forestry.api.apiculture.BeeManager;
+import forestry.api.apiculture.IBee;
+import forestry.api.apiculture.IBeeGenome;
+import forestry.api.apiculture.IBeeHousing;
+import forestry.api.apiculture.IBeeHousingInventory;
+import forestry.api.apiculture.IBeeListener;
+import forestry.api.apiculture.IBeeModifier;
+import forestry.api.apiculture.IBeekeepingLogic;
+import forestry.api.apiculture.IHiveTile;
+import forestry.api.apiculture.hives.IHiveRegistry;
+import forestry.api.core.EnumHumidity;
+import forestry.api.core.EnumTemperature;
+import forestry.api.core.ForestryAPI;
+import forestry.api.core.IErrorLogic;
+import forestry.api.genetics.IAllele;
+import forestry.apiculture.BeekeepingLogic;
+import forestry.apiculture.blocks.BlockBeeHives;
+import forestry.apiculture.genetics.BeeDefinition;
+import forestry.apiculture.genetics.alleles.AlleleEffect;
+import forestry.apiculture.network.packets.PacketActiveUpdate;
+import forestry.core.config.Config;
+import forestry.core.inventory.InventoryAdapter;
+import forestry.core.proxy.Proxies;
+import forestry.core.tiles.IActivatable;
+import forestry.core.utils.DamageSourceForestry;
+import forestry.core.utils.InventoryUtil;
+import forestry.core.utils.ItemStackUtil;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -35,42 +62,9 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
-
-import com.mojang.authlib.GameProfile;
-
-import forestry.api.apiculture.BeeManager;
-import forestry.api.apiculture.IBee;
-import forestry.api.apiculture.IBeeGenome;
-import forestry.api.apiculture.IBeeHousing;
-import forestry.api.apiculture.IBeeHousingInventory;
-import forestry.api.apiculture.IBeeListener;
-import forestry.api.apiculture.IBeeModifier;
-import forestry.api.apiculture.IBeekeepingLogic;
-import forestry.api.apiculture.IHiveTile;
-import forestry.api.apiculture.hives.IHiveRegistry;
-import forestry.api.core.EnumHumidity;
-import forestry.api.core.EnumTemperature;
-import forestry.api.core.ForestryAPI;
-import forestry.api.core.IErrorLogic;
-import forestry.api.genetics.IAllele;
-import forestry.apiculture.BeekeepingLogic;
-import forestry.apiculture.WorldgenBeekeepingLogic;
-import forestry.apiculture.blocks.BlockBeeHives;
-import forestry.apiculture.genetics.BeeDefinition;
-import forestry.apiculture.genetics.alleles.AlleleEffect;
-import forestry.apiculture.network.packets.PacketActiveUpdate;
-import forestry.core.config.Config;
-import forestry.core.inventory.InventoryAdapter;
-import forestry.core.proxy.Proxies;
-import forestry.core.tiles.IActivatable;
-import forestry.core.utils.DamageSourceForestry;
-import forestry.core.utils.InventoryUtil;
-import forestry.core.utils.ItemStackUtil;
-import forestry.core.utils.TickHelper;
 
 public class TileHive extends TileEntity implements ITickable, IHiveTile, IActivatable, IBeeHousing {
 	private static final DamageSource damageSourceBeeHive = new DamageSourceForestry("bee.hive");
@@ -80,12 +74,11 @@ public class TileHive extends TileEntity implements ITickable, IHiveTile, IActiv
 	@Nonnull
 	private final HiveBeeHousingInventory inventory;
 	@Nonnull
-	private final WorldgenBeekeepingLogic beeLogic;
+	private final BeekeepingLogic beeLogic;
 	@Nonnull
 	private final IErrorLogic errorLogic;
 	@Nonnull
 	private final Predicate<EntityLivingBase> beeTargetPredicate;
-	private final TickHelper tickHelper = new TickHelper();
 
 	private IBee containedBee = null;
 	private boolean active = false;
@@ -100,7 +93,7 @@ public class TileHive extends TileEntity implements ITickable, IHiveTile, IActiv
 
 	public TileHive() {
 		inventory = new HiveBeeHousingInventory(this);
-		beeLogic = new WorldgenBeekeepingLogic(this);
+		beeLogic = new BeekeepingLogic(this);
 		errorLogic = ForestryAPI.errorStateRegistry.createErrorLogic();
 		beeTargetPredicate = new BeeTargetPredicate(this);
 	}
@@ -110,13 +103,12 @@ public class TileHive extends TileEntity implements ITickable, IHiveTile, IActiv
 		if (Config.generateBeehivesDebug) {
 			return;
 		}
-		tickHelper.onTick();
 
 		if (worldObj.isRemote) {
-			if (!updatedLight && tickHelper.updateOnInterval(100)) {
+			if (!updatedLight && worldObj.getWorldTime() % 100 == 0) {
 				updatedLight = worldObj.checkLightFor(EnumSkyBlock.BLOCK, getPos());
 			}
-			if (active && tickHelper.updateOnInterval(4)) {
+			if (active && worldObj.rand.nextInt(4) == 0) {
 				if (beeLogic.canDoBeeFX()) {
 					beeLogic.doBeeFX();
 				}
@@ -124,17 +116,15 @@ public class TileHive extends TileEntity implements ITickable, IHiveTile, IActiv
 		} else {
 			boolean canWork = beeLogic.canWork(); // must be called every tick to stay updated
 
-			if (tickHelper.updateOnInterval(angry ? 10 : 200)) {
+			if (worldObj.rand.nextInt(angry ? 10 : 200) == 0) {
 				if (calmTime == 0) {
 					if (canWork) {
-						if(worldObj.getWorldInfo().getDifficulty() != EnumDifficulty.PEACEFUL) {
-							AxisAlignedBB boundingBox = AlleleEffect.getBounding(getContainedBee().getGenome(), this);
-							List<EntityLivingBase> entities = worldObj.getEntitiesWithinAABB(EntityLivingBase.class, boundingBox, beeTargetPredicate);
-							if (!entities.isEmpty()) {
-								Collections.shuffle(entities);
-								EntityLivingBase entity = entities.get(0);
-								attack(entity, 2);
-							}
+						AxisAlignedBB boundingBox = AlleleEffect.getBounding(getContainedBee().getGenome(), this);
+						List<EntityLivingBase> entities = worldObj.getEntitiesWithinAABB(EntityLivingBase.class, boundingBox, beeTargetPredicate);
+						if (!entities.isEmpty()) {
+							Collections.shuffle(entities);
+							EntityLivingBase entity = entities.get(0);
+							attack(entity, 2);
 						}
 						beeLogic.doWork();
 					}
