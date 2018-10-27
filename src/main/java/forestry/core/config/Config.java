@@ -52,6 +52,9 @@ public class Config {
 	// Graphics
 	public static boolean enableParticleFX = true;
 
+	//Humus
+	public static int humusDegradeDelimiter = 3;
+	
 	// Genetics
 	public static boolean pollinateVanillaTrees = true;
 	public static float researchMutationBoostMultiplier = 1.5f;
@@ -82,6 +85,7 @@ public class Config {
 	public static int farmSize = 2;
 	public static boolean squareFarms = false;
 	private static boolean enableExUtilEnderLily = true;
+	private static boolean enableExUtilRedOrchid = true;
 	private static boolean enableMagicalCropsSupport = true;
 
 	// Mail
@@ -120,6 +124,8 @@ public class Config {
 	public static boolean isExUtilEnderLilyEnabled() {
 		return enableExUtilEnderLily;
 	}
+
+	public static boolean isExUtilRedOrchidEnabled() { return enableExUtilRedOrchid; }
 
 	public static boolean isMagicalCropsSupportEnabled() {
 		return enableMagicalCropsSupport;
@@ -208,6 +214,8 @@ public class Config {
 
 		enableBackpackResupply = configCommon.getBooleanLocalized("performance", "backpacks.resupply", enableBackpackResupply);
 
+		humusDegradeDelimiter = configCommon.getIntLocalized("tweaks.humus", "degradeDelimiter", humusDegradeDelimiter, 1, 10);
+		
 		mailAlertEnabled = configCommon.getBooleanLocalized("tweaks.gui.mail.alert", "enabled", mailAlertEnabled);
 		mailAlertXPosition = configCommon.getEnumLocalized("tweaks.gui.mail.alert", "xPosition", mailAlertXPosition, GuiMailboxInfo.XPosition.values());
 		mailAlertYPosition = configCommon.getEnumLocalized("tweaks.gui.mail.alert", "yPosition", mailAlertYPosition, GuiMailboxInfo.YPosition.values());
@@ -221,6 +229,7 @@ public class Config {
 		farmSize = configCommon.getIntLocalized("tweaks.farms", "size", farmSize, 1, 3);
 		squareFarms = configCommon.getBooleanLocalized("tweaks.farms", "square", squareFarms);
 		enableExUtilEnderLily = configCommon.getBooleanLocalized("tweaks.farms", "enderlily", enableExUtilEnderLily);
+		enableExUtilRedOrchid = configCommon.getBooleanLocalized("tweaks.farms", "redorchid", enableExUtilRedOrchid);
 		enableMagicalCropsSupport = configCommon.getBooleanLocalized("tweaks.farms", "magicalcrops", enableMagicalCropsSupport);
 
 		String[] availableStructures = new String[]{"alveary3x3", "farm3x3", "farm3x4", "farm3x5", "farm4x4", "farm5x5"};
